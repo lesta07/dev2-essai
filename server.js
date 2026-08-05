@@ -1,0 +1,16 @@
+const express = require('express');
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+app.use(express.json());
+
+// Route pour recevoir l'appel de ton téléphone
+app.post('/api/verifier', (req, res) => {
+    console.log("Requête reçue du téléphone !");
+    // Le serveur valide l'action
+    res.json({ success: true, message: "OK depuis Render" });
+});
+
+app.listen(PORT, () => {
+    console.log(`Serveur dev2 en écoute sur le port ${PORT}`);
+});
