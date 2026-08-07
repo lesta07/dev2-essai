@@ -2,41 +2,34 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Test Envoi Photo</title>
+    <title>Envoi Photo</title>
 </head>
 <body>
-    <h1>Tester l'envoi de photo vers Render</h1>
-
-    <input type="file" id="fileInput"><br><br>
+    <h1>Envoyer une photo au serveur</h1>
+    <input type="file" id="fileInput">
     <button onclick="envoyerPhoto()">Envoyer la photo</button>
-
     <p id="resultat"></p>
 
     <script>
         function envoyerPhoto() {
             const fileInput = document.getElementById('fileInput');
-            if (fileInput.files.length === 0) {
-                alert("Choisissez une photo d'abord !");
-                return;
-            }
+            if (fileInput.files.length === 0) return alert("Choisissez une photo !");
 
             const formData = new FormData();
             formData.append("maPhoto", fileInput.files[0]);
 
             document.getElementById('resultat').innerText = "Envoi en cours...";
 
-            fetch("https://dev2-essai.onrender.com/api/upload-photo", {
+            fetch("/api/upload-photo", {
                 method: "POST",
                 body: formData
             })
             .then(response => response.json())
             .then(data => {
-                console.log(data);
-                document.getElementById('resultat').innerText = "Succès ! " + data.message;
+                document.getElementById('resultat').innerText = "Succès : " + data.message;
             })
             .catch(error => {
-                console.error("Erreur:", error);
-                document.getElementById('resultat').innerText = "Erreur lors de l'envoi.";
+                document.getElementById('resultat').innerText = "Erreur d'envoi.";
             });
         }
     </script>
