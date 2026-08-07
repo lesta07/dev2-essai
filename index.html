@@ -2,49 +2,43 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Mon Test Photo</title>
+    <title>Test Envoi Photo</title>
 </head>
 <body>
+    <h1>Tester l'envoi de photo vers Render</h1>
 
-    <h1>Envoyer une photo à mon serveur</h1>
+    <input type="file" id="fileInput"><br><br>
+    <button onclick="envoyerPhoto()">Envoyer la photo</button>
 
-    <!-- 1. Un champ pour choisir une photo sur votre PC -->
-    <input type="file" id="fileInput">
-    
-    <!-- 2. Un bouton pour lancer l'envoi -->
-    <button onclick="envoyerPhoto()">Envoyer au serveur</button>
+    <p id="resultat"></p>
 
-    <!-- 3. Le code JavaScript -->
     <script>
         function envoyerPhoto() {
             const fileInput = document.getElementById('fileInput');
-
-            // Vérifie si une photo a bien été sélectionnée
             if (fileInput.files.length === 0) {
-                alert("Veuillez d'abord choisir une photo !");
+                alert("Choisissez une photo d'abord !");
                 return;
             }
 
             const formData = new FormData();
-            // On ajoute la photo sélectionnée dans le "FormData"
-            formData.append("maPhoto", fileInput.files[0]); 
+            formData.append("maPhoto", fileInput.files[0]);
 
-            // On l'envoie vers votre serveur Render
+            document.getElementById('resultat').innerText = "Envoi en cours...";
+
             fetch("https://dev2-essai.onrender.com/api/upload-photo", {
                 method: "POST",
                 body: formData
             })
             .then(response => response.json())
             .then(data => {
-                console.log("Réponse du serveur :", data);
-                alert("Photo envoyée avec succès !");
+                console.log(data);
+                document.getElementById('resultat').innerText = "Succès ! " + data.message;
             })
             .catch(error => {
                 console.error("Erreur:", error);
-                alert("Erreur lors de l'envoi.");
+                document.getElementById('resultat').innerText = "Erreur lors de l'envoi.";
             });
         }
     </script>
-
 </body>
 </html>
