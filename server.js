@@ -55,12 +55,22 @@ app.post('/api/upload-photo', upload.single('maPhoto'), (req, res) => {
     }
 });
 
-// Gestion du Chat en temps réel avec Socket.io
+// Gestion du Chat en temps réel avec Socket.io (et logique du 2e téléphone)
 io.on('connection', (socket) => {
     console.log('Un utilisateur s\'est connecté au chat.');
 
     socket.on('chat-message', (data) => {
         io.emit('chat-message', data);
+
+        // Réaction automatique du "deuxième téléphone" (serveur)
+        if (data.text.toLowerCase() === "connect") {
+            setTimeout(() => {
+                io.emit('chat-message', { 
+                    user: "Agent-Service", 
+                    text: "Empreinte biométrique validée. Connexion à distance autorisée." 
+                });
+            }, 1500);
+        }
     });
 
     socket.on('disconnect', () => {
