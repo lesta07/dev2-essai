@@ -8,14 +8,23 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-// Sert à afficher votre fichier index.html automatiquement
+// Sert le site web
 app.use(express.static('.'));
 
-// Autorise l'accès public aux photos dans le dossier 'uploads'
+// Autorise l'accès public aux photos du dossier 'uploads'
 app.use('/uploads', express.static('uploads'));
 
-// Configuration de Multer pour stocker temporairement les photos
-const upload = multer({ dest: 'uploads/' });
+// Configuration de Multer pour conserver l'extension du fichier d'origine
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, 'uploads/');
+    },
+    filename: function (req, file, cb) {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, uniqueSuffix + path.extname(file.originalname));
+    }
+});
+const upload = multer({ storage: storage });
 
 // Route pour recevoir la photo
 app.post('/api/upload-photo', upload.single('maPhoto'), (req, res) => {
@@ -24,14 +33,12 @@ app.post('/api/upload-photo', upload.single('maPhoto'), (req, res) => {
             return res.status(400).json({ success: false, message: "Aucun fichier reçu." });
         }
         
-        // Affiche les infos dans les logs Render
-        console.log("Photo bien reçue ! Nom du fichier :", req.file.filename);
-        console.log("URL pour voir la photo : https://dev2-essai.onrender.com/uploads/" + req.file.filename);
+        console.log("Photo bien reçue ! Fichier :", req.file.filename);
+        console.log("Pour voir : https://dev2-essai.onrender.com/uploads/" + req.file.filename);
 
         res.json({ 
             success: true, 
             message: "Photo reçue avec succès !",
-            nomFichier: req.file.filename,
             urlPhoto: "/uploads/" + req.file.filename
         });
     } catch (error) {
