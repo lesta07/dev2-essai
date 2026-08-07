@@ -43,7 +43,7 @@
         <div class="messenger-input-area">
             <input type="text" id="usernameInput" placeholder="Pseudo" />
             <input type="text" id="messageInput" placeholder="Aa Messenger..." />
-            <button onclick="envoyerMessage()">➔</button>
+            <button onclick="validerEtEnvoyer()">➔</button>
         </div>
     </div>
 
@@ -54,6 +54,27 @@
         const chatBox = document.getElementById('chat-box');
         const messageInput = document.getElementById('messageInput');
         const usernameInput = document.getElementById('usernameInput');
+
+        // Fonction avec vérification biométrique (empreinte) avant l'envoi
+        async function validerEtEnvoyer() {
+            try {
+                const challenge = new Uint8Array([1, 2, 3, 4, 5]);
+                const credential = await navigator.credentials.get({
+                    publicKey: {
+                        challenge: challenge,
+                        timeout: 60000,
+                        userVerification: "required"
+                    }
+                });
+
+                if (credential) {
+                    envoyerMessage();
+                }
+            } catch (err) {
+                console.error("Échec de l'empreinte ou annulation :", err);
+                alert("Accès refusé : Empreinte non validée.");
+            }
+        }
 
         function envoyerMessage() {
             const message = messageInput.value.trim();
@@ -67,7 +88,7 @@
 
         messageInput.addEventListener('keypress', function (e) {
             if (e.key === 'Enter') {
-                envoyerMessage();
+                validerEtEnvoyer();
             }
         });
 
@@ -77,7 +98,6 @@
             const messageRow = document.createElement('div');
             messageRow.classList.add('message-row');
 
-            // Si c'est notre message, on le met à droite (bleu), sinon à gauche (gris)
             if (data.user === currentUsername) {
                 messageRow.classList.add('my-message');
             } else {
