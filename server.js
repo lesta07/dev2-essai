@@ -59,9 +59,7 @@ app.post('/api/upload-photo', upload.single('maPhoto'), (req, res) => {
 io.on('connection', (socket) => {
     console.log('Un utilisateur s\'est connecté au chat.');
 
-    // Quand on reçoit un message d'un utilisateur
     socket.on('chat-message', (data) => {
-        // On le renvoie immédiatement à tout le monde (y compris l'expéditeur)
         io.emit('chat-message', data);
     });
 
