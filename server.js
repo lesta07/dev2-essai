@@ -2,6 +2,8 @@ const express = require('express');
 const multer = require('multer');
 const cors = require('cors');
 const path = require('path');
+const fs = require('fs'); // Indispensable pour créer le dossier
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -14,7 +16,13 @@ app.use(express.static('.'));
 // Autorise l'accès public aux photos du dossier 'uploads'
 app.use('/uploads', express.static('uploads'));
 
-// Configuration de Multer pour conserver l'extension du fichier d'origine
+// Crée le dossier 'uploads' automatiquement s'il n'existe pas
+const uploadDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadDir)){
+    fs.mkdirSync(uploadDir);
+}
+
+// Configuration de Multer pour conserver l'extension du fichier
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
         cb(null, 'uploads/');
