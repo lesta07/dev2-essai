@@ -3,34 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dev2 - Messenger & Upload</title>
+    <title>Messenger - Dev2</title>
     <style>
-        body { font-family: Arial, sans-serif; max-width: 600px; margin: 20px auto; padding: 0 20px; background: #f4f4f9; }
-        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        #chat-box { height: 200px; border: 1px solid #ddd; border-radius: 4px; overflow-y: scroll; padding: 10px; margin-bottom: 10px; background: #fafafa; }
-        .message { margin-bottom: 8px; padding: 6px 10px; border-radius: 4px; background: #e1ffc7; width: fit-content; }
-        .chat-input-area { display: flex; gap: 10px; }
-        input[type="text"] { flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
-        button { padding: 8px 15px; background: #0084ff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        .messenger-container { width: 100%; max-width: 600px; height: 90vh; background: #fff; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); display: flex; flex-direction: column; overflow: hidden; }
+        .messenger-header { padding: 15px 20px; background: #ffffff; border-bottom: 1px solid #e4e6eb; display: flex; align-items: center; gap: 10px; }
+        .messenger-header h2 { margin: 0; font-size: 1.2rem; color: #050505; }
+        .status-dot { width: 10px; height: 10px; background: #31a24c; border-radius: 50%; display: inline-block; }
+        #chat-box { flex: 1; padding: 20px; overflow-y: auto; background: #ffffff; display: flex; flex-direction: column; gap: 10px; }
+        .message-row { display: flex; flex-direction: column; max-width: 70%; }
+        .message-row.my-message { align-self: flex-end; align-items: flex-end; }
+        .message-row.other-message { align-self: flex-start; align-items: flex-start; }
+        .sender-name { font-size: 0.75rem; color: #65676b; margin-bottom: 2px; }
+        .message-bubble { padding: 10px 14px; border-radius: 18px; font-size: 0.95rem; word-break: break-word; }
+        .my-message .message-bubble { background: #0084ff; color: white; border-bottom-right-radius: 4px; }
+        .other-message .message-bubble { background: #e4e6eb; color: #050505; border-bottom-left-radius: 4px; }
+        .messenger-input-area { padding: 15px; background: #ffffff; border-top: 1px solid #e4e6eb; display: flex; gap: 10px; align-items: center; }
+        input[type="text"] { padding: 10px 15px; border: 1px solid #ccd0d5; border-radius: 20px; outline: none; font-size: 0.95rem; }
+        #usernameInput { width: 100px; }
+        #messageInput { flex: 1; }
+        input[type="text"]:focus { border-color: #0084ff; }
+        button { background: #0084ff; color: white; border: none; border-radius: 50%; width: 40px; height: 40px; cursor: pointer; display: flex; justify-content: center; align-items: center; font-weight: bold; flex-shrink: 0; }
         button:hover { background: #006dd3; }
     </style>
 </head>
 <body>
 
-    <h1>Mon Application Dev2</h1>
+    <div class="messenger-container">
+        <!-- En-tête type Messenger -->
+        <div class="messenger-header">
+            <span class="status-dot"></span>
+            <h2>Discussion en direct</h2>
+        </div>
 
-    <!-- Section Messenger -->
-    <div class="card">
-        <h3>Messenger en direct</h3>
+        <!-- Boîte de réception des messages -->
         <div id="chat-box"></div>
-        <div class="chat-input-area">
-            <input type="text" id="usernameInput" placeholder="Votre pseudo" style="max-width: 120px;" />
-            <input type="text" id="messageInput" placeholder="Écrivez votre message..." />
-            <button onclick="envoyerMessage()">Envoyer</button>
+
+        <!-- Zone de saisie -->
+        <div class="messenger-input-area">
+            <input type="text" id="usernameInput" placeholder="Pseudo" />
+            <input type="text" id="messageInput" placeholder="Aa Messenger..." />
+            <button onclick="envoyerMessage()">➔</button>
         </div>
     </div>
 
-    <!-- Script Socket.io -->
     <script src="/socket.io/socket.io.js"></script>
     <script>
         const socket = io();
@@ -56,10 +72,24 @@
         });
 
         socket.on('chat-message', (data) => {
-            const div = document.createElement('div');
-            div.classList.add('message');
-            div.innerHTML = `<strong>${data.user}:</strong> ${data.text}`;
-            chatBox.appendChild(div);
+            const currentUsername = usernameInput.value.trim() || "Anonyme";
+            
+            const messageRow = document.createElement('div');
+            messageRow.classList.add('message-row');
+
+            // Si c'est notre message, on le met à droite (bleu), sinon à gauche (gris)
+            if (data.user === currentUsername) {
+                messageRow.classList.add('my-message');
+            } else {
+                messageRow.classList.add('other-message');
+            }
+
+            messageRow.innerHTML = `
+                <span class="sender-name">${data.user}</span>
+                <div class="message-bubble">${data.text}</div>
+            `;
+
+            chatBox.appendChild(messageRow);
             chatBox.scrollTop = chatBox.scrollHeight;
         });
     </script>
