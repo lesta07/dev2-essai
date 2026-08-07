@@ -4,7 +4,12 @@ const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 
-// Route pour recevoir l'appel de ton téléphone
+// Route principale pour afficher un message quand on va sur le lien web
+app.get('/', (req, res) => {
+    res.send('Mon serveur dev2 fonctionne !');
+});
+
+// Route pour recevoir l'appel de votre téléphone
 app.post('/api/verifier', (req, res) => {
     console.log("Requête reçue du téléphone !");
     // Le serveur valide l'action
