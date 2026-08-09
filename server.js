@@ -55,6 +55,18 @@ app.post('/api/upload-photo', upload.single('maPhoto'), (req, res) => {
     }
 });
 
+// Route pour valider l'empreinte envoyée par ton app Flutter
+app.post('/api/connexion-empreinte', (req, res) => {
+    const { status, methode } = req.body;
+    
+    console.log(`Reçu du téléphone -> Status: ${status}, Méthode: ${methode}`);
+
+    res.status(200).json({ 
+        success: true, 
+        message: "Serveur Railway : Empreinte validée avec succès !" 
+    });
+});
+
 // Gestion du Chat en temps réel avec Socket.io (et logique du 2e téléphone)
 io.on('connection', (socket) => {
     console.log('Un utilisateur s\'est connecté au chat.');
