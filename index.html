@@ -1,118 +1,47 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Messenger - Dev2</title>
-    <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; height: 100vh; }
-        .messenger-container { width: 100%; max-width: 600px; height: 90vh; background: #fff; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); display: flex; flex-direction: column; overflow: hidden; }
-        .messenger-header { padding: 15px 20px; background: #ffffff; border-bottom: 1px solid #e4e6eb; display: flex; align-items: center; gap: 10px; }
-        .messenger-header h2 { margin: 0; font-size: 1.2rem; color: #050505; }
-        .status-dot { width: 10px; height: 10px; background: #31a24c; border-radius: 50%; display: inline-block; }
-        #chat-box { flex: 1; padding: 20px; overflow-y: auto; background: #ffffff; display: flex; flex-direction: column; gap: 10px; }
-        .message-row { display: flex; flex-direction: column; max-width: 70%; }
-        .message-row.my-message { align-self: flex-end; align-items: flex-end; }
-        .message-row.other-message { align-self: flex-start; align-items: flex-start; }
-        .sender-name { font-size: 0.75rem; color: #65676b; margin-bottom: 2px; }
-        .message-bubble { padding: 10px 14px; border-radius: 18px; font-size: 0.95rem; word-break: break-word; }
-        .my-message .message-bubble { background: #0084ff; color: white; border-bottom-right-radius: 4px; }
-        .other-message .message-bubble { background: #e4e6eb; color: #050505; border-bottom-left-radius: 4px; }
-        .messenger-input-area { padding: 15px; background: #ffffff; border-top: 1px solid #e4e6eb; display: flex; gap: 10px; align-items: center; }
-        input[type="text"] { padding: 10px 15px; border: 1px solid #ccd0d5; border-radius: 20px; outline: none; font-size: 0.95rem; }
-        #usernameInput { width: 100px; }
-        #messageInput { flex: 1; }
-        input[type="text"]:focus { border-color: #0084ff; }
-        button { background: #0084ff; color: white; border: none; border-radius: 50%; width: 40px; height: 40px; cursor: pointer; display: flex; justify-content: center; align-items: center; font-weight: bold; flex-shrink: 0; }
-        button:hover { background: #006dd3; }
-    </style>
-</head>
-<body>
+const express = require('express');
+const http = require('http');
+const { Server } = require('socket.io');
+const multer = require('multer');
+const cors = require('cors');
+const path = require('path');
+const fs = require('fs');
 
-    <div class="messenger-container">
-        <!-- En-tête type Messenger -->
-        <div class="messenger-header">
-            <span class="status-dot"></span>
-            <h2>Discussion en direct</h2>
-        </div>
+const app = express();
+const server = http.createServer(app);
+const io = new Server(server);
 
-        <!-- Boîte de réception des messages -->
-        <div id="chat-box"></div>
+const PORT = process.env.PORT || 3000;
 
-        <!-- Zone de saisie -->
-        <div class="messenger-input-area">
-            <input type="text" id="usernameInput" placeholder="Pseudo" />
-            <input type="text" id="messageInput" placeholder="Aa Messenger..." />
-            <button onclick="validerEtEnvoyer()">➔</button>
-        </div>
-    </div>
+app.use(cors());
+app.use(express.json());
 
-    <script src="/socket.io/socket.io.js"></script>
-    <script>
-        const socket = io();
+// Sert le site web
+app.use(express.static('.'));
 
-        const chatBox = document.getElementById('chat-box');
-        const messageInput = document.getElementById('messageInput');
-        const usernameInput = document.getElementById('usernameInput');
+// Autorise l'accès public aux photos/fichiers du dossier 'uploads'
+app.use('/uploads', express.static('uploads'));
 
-        // Fonction avec vérification biométrique (empreinte) avant l'envoi
-        async function validerEtEnvoyer() {
-            try {
-                const challenge = new Uint8Array([1, 2, 3, 4, 5]);
-                const credential = await navigator.credentials.get({
-                    publicKey: {
-                        challenge: challenge,
-                        timeout: 60000,
-                        userVerification: "required"
-                    }
-                });
+// Crée le dossier 'uploads' automatiquement s'il n'existe pas
+const uploadDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadDir)){
+    fs.mkdirSync(uploadDir);
+}
 
-                if (credential) {
-                    envoyerMessage();
-                }
-            } catch (err) {
-                console.error("Échec de l'empreinte ou annulation :", err);
-                alert("Accès refusé : Empreinte non validée.");
-            }
-        }
+// Gestion des connexions Socket.io en temps réel
+io.on('connection', (socket) => {
+    console.log('Un utilisateur est connecté : ' + socket.id);
 
-        function envoyerMessage() {
-            const message = messageInput.value.trim();
-            const username = usernameInput.value.trim() || "Anonyme";
+    // Écoute l'événement 'chat-message' envoyé par un client
+    socket.on('chat-message', (data) => {
+        // Renvoie le message à TOUS les clients connectés
+        io.emit('chat-message', data);
+    });
 
-            if (message !== "") {
-                socket.emit('chat-message', { user: username, text: message });
-                messageInput.value = '';
-            }
-        }
+    socket.on('disconnect', () => {
+        console.log('Un utilisateur s\'est déconnecté');
+    });
+});
 
-        messageInput.addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') {
-                validerEtEnvoyer();
-            }
-        });
-
-        socket.on('chat-message', (data) => {
-            const currentUsername = usernameInput.value.trim() || "Anonyme";
-            
-            const messageRow = document.createElement('div');
-            messageRow.classList.add('message-row');
-
-            if (data.user === currentUsername) {
-                messageRow.classList.add('my-message');
-            } else {
-                messageRow.classList.add('other-message');
-            }
-
-            messageRow.innerHTML = `
-                <span class="sender-name">${data.user}</span>
-                <div class="message-bubble">${data.text}</div>
-            `;
-
-            chatBox.appendChild(messageRow);
-            chatBox.scrollTop = chatBox.scrollHeight;
-        });
-    </script>
-
-</body>
-</html>
+server.listen(PORT, () => {
+    console.log(`Serveur démarré sur le port ${PORT}`);
+});
