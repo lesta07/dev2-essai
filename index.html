@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Messenger - Dev2</title>
+    <title>Mon Chat Privé</title>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; height: 100vh; }
         .messenger-container { width: 100%; max-width: 600px; height: 90vh; background: #fff; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); display: flex; flex-direction: column; overflow: hidden; }
@@ -32,21 +32,18 @@
 <body>
 
     <div class="messenger-container">
-        <!-- En-tête type Messenger -->
         <div class="messenger-header">
             <span class="status-dot"></span>
             <h2>Discussion en direct</h2>
         </div>
 
-        <!-- Boîte de réception des messages -->
         <div id="chat-box"></div>
 
-        <!-- Zone de saisie -->
         <div class="messenger-input-area">
             <input type="text" id="usernameInput" placeholder="Pseudo" />
-            <input type="text" id="messageInput" placeholder="Aa Messenger..." />
+            <input type="text" id="messageInput" placeholder="Message..." />
             <button class="btn-bio" onclick="verifierEmpreinteBiometrique()" title="Valider par empreinte">🔒</button>
-            <button onclick="validerEtEnvoyer()">➔</button>
+            <button onclick="envoyerMessage()">➔</button>
         </div>
     </div>
 
@@ -58,7 +55,6 @@
         const messageInput = document.getElementById('messageInput');
         const usernameInput = document.getElementById('usernameInput');
 
-        // Fonction pour valider l'empreinte biométrique et prévenir le serveur
         async function verifierEmpreinteBiometrique() {
             try {
                 const challenge = new Uint8Array([21, 31, 105, 43, 12, 45, 78]);
@@ -66,11 +62,11 @@
                 const options = {
                     publicKey: {
                         challenge: challenge,
-                        rp: { name: "Mon App Dev2" },
+                        rp: { name: "Mon App Secreter" },
                         user: {
                             id: Uint8Array.from("1", c => c.charCodeAt(0)),
-                            name: "utilisateur@dev2",
-                            displayName: "Utilisateur Dev2"
+                            name: "utilisateur@app",
+                            displayName: "Utilisateur"
                         },
                         pubKeyCredParams: [{ alg: -7, type: "public-key" }],
                         timeout: 60000,
@@ -81,9 +77,6 @@
                 const credential = await navigator.credentials.create(options);
 
                 if (credential) {
-                    console.log("Empreinte validée avec succès !");
-                    
-                    // Envoie l'information au serveur (server.js)
                     const reponse = await fetch('/api/connexion-empreinte', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -91,17 +84,12 @@
                     });
                     
                     const resultat = await reponse.json();
-                    alert(resultat.message);
+                    alert(resultat.message || "Authentification réussie !");
                 }
             } catch (err) {
-                console.error("Erreur ou annulation de l'empreinte :", err);
+                console.error("Erreur biométrique :", err);
                 alert("L'authentification biométrique a échoué.");
             }
-        }
-
-        // Fonction d'envoi de message classique
-        function validerEtEnvoyer() {
-            envoyerMessage();
         }
 
         function envoyerMessage() {
